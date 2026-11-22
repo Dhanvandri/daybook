@@ -1,0 +1,59 @@
+name: Build Daybook Desktop
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    name: ${{ matrix.platform }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Windows
+            runner: windows-2025
+            arch: x64
+            artifact: .exe
+          - platform: Linux
+            runner: ubuntu-24.04
+            arch: x64
+            artifact: .AppImage
+          - platform: macOS
+            runner: macos-15
+            arch: arm64
+            artifact: .dmg
+          - platform: macOS
+            runner: macos-15-intel
+            arch: x64
+            artifact: .dmg
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Test Electron on Linux
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run smoke -- --no-sandbox
+      - name: Test Electron on Windows and macOS
+        if: runner.os != 'Linux'
+        run: npm run smoke
+      - name: Package Daybook
+        run: npm run dist -- --${{ matrix.arch }}
+      - name: Upload installer
+        uses: actions/upload-artifact@v6
+        with:
+          name: Daybook-${{ matrix.platform }}-${{ matrix.arch }}
+          path: dist/*${{ matrix.artifact }}
+          if-no-files-found: error

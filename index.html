@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Daybook 2.1.1 — Activity Calendar & Reminders</title>
+  <style>
+    :root {
+      --bg: #f5f5f2; --paper:#ffffff; --paper2:#fbfbf9; --line:#e9e9e3;
+      --ink:#202821; --muted:#7d867e; --accent:#336b55; --accent2:#e9f3ea;
+      --deep:#203d31; --orange:#e0a96d; --shadow:0 14px 42px rgba(31,50,34,.055);
+      --radius:18px; color-scheme:light;
+    }
+    * { box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:14px; }
+    button,input,textarea,select { font:inherit; }
+    button { cursor:pointer; }
+    button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible { outline:3px solid #81bba0;outline-offset:2px; }
+    button:disabled { cursor:default; }
+    .app { display:grid; grid-template-columns:246px minmax(0,1fr); min-height:100vh; }
+    .sidebar { background:#f0f2ec; border-right:1px solid #e1e7dc; padding:30px 22px; display:flex; flex-direction:column; gap:32px; }
+    .brand { display:flex; align-items:center; gap:11px; text-decoration:none; color:var(--deep); }
+    .brand-mark { width:38px;height:38px; background:var(--deep); display:grid;place-items:center;border-radius:12px;color:white; font-weight:800;font-size:22px; }
+    .brand-title {font-weight:800;font-size:19px;letter-spacing:-.6px;}
+    .brand-sub {font-size:11px;color:#758578;margin-top:1px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700;}
+    .section-label {font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#8d988d;font-weight:800;margin:0 0 12px 8px;}
+    .side-link {width:100%;display:flex;align-items:center;gap:11px;border:0;border-radius:10px;color:#415447;background:transparent;padding:13px 14px;text-align:left;font-weight:700;}
+    .side-link.active {background:var(--paper);color:var(--deep);box-shadow:0 3px 12px rgba(20,40,28,.04);}
+    .side-link svg {width:17px;height:17px;flex-shrink:0;}
+    .sidebar-bottom {margin-top:auto;}
+    .private-card {background:#e7ece4;border-radius:16px;padding:17px;color:#536858;line-height:1.6;font-size:12px;}
+    .private-card b {display:block;color:#325440;font-size:13px;margin-bottom:6px;}
+    .side-footer {font-size:11px;color:#9ba69b;text-align:center;margin-top:18px;}
+    .main {padding:38px clamp(20px,4vw,62px) 38px;max-width:1680px;width:100%;margin:0 auto;}
+    .eyebrow {color:var(--accent);text-transform:uppercase;letter-spacing:1.6px;font-weight:800;font-size:11px;}
+    h1 {font-size:clamp(27px,3vw,38px);letter-spacing:-1.5px;font-weight:750;margin:8px 0 4px;}
+    .subhead {color:var(--muted);margin:0;line-height:1.5;}
+    .top {display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:28px;flex-wrap:wrap;}
+    .top-actions {display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+    .button {border:1px solid var(--line);background:#fff;color:#4a5c4e;padding:10px 14px;border-radius:10px;font-weight:700;display:inline-flex;gap:8px;justify-content:center;align-items:center;min-height:40px;}
+    .button:hover {background:#f6f9f5;}
+    .button.primary {background:var(--accent);color:#fff;border-color:var(--accent);}
+    .button.primary:hover {background:#275641;}
+    .button.small {padding:6px 10px;min-height:32px;font-size:12px;}
+    .button.ghost {border-color:transparent;background:transparent;}
+    .button.danger {color:#ac4343;}
+    .button svg {width:16px;height:16px;}
+    .stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:19px;}
+    .stat {background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px 19px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow);}
+    .stat-icon {width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#eff4ed;color:#4b7c64;flex-shrink:0;}
+    .stat-icon svg {width:20px;height:20px;}
+    .stat-val {font-size:25px;letter-spacing:-.5px;font-weight:800;line-height:1.15;}
+    .stat-name {color:var(--muted);font-size:12px;margin-top:4px;}
+    .dashboard {display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.9fr);gap:19px;align-items:start;}
+    .card {background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .cal-card {padding:22px;}
+    .cal-header {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:21px;}
+    .cal-title {font-size:19px;font-weight:800;letter-spacing:-.4px;margin:0;}
+    .cal-nav {display:flex;gap:8px;}
+    .icon-btn {display:grid;place-items:center;border:1px solid var(--line);color:#52695a;background:white;border-radius:10px;width:35px;height:35px;}
+    .icon-btn:hover {background:#f1f6ef;}
+    .icon-btn svg {height:16px;width:16px;}
+    .weekdays,.cal-grid {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));}
+    .weekdays {margin-bottom:6px;}
+    .weekday {text-align:center;color:#9aa19a;font-size:11px;font-weight:800;padding:9px 2px;}
+    .cal-grid {gap:6px;}
+    .date {position:relative;border:1px solid transparent;background:#fbfcfa;border-radius:11px;min-height:clamp(62px,7.1vw,94px);padding:10px 6px 6px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;color:#475347;}
+    .date:hover {border-color:#a7c7af;background:#f3f9f3;}
+    .date .number {font-size:13px;font-weight:650;display:grid;place-items:center;width:29px;height:29px;border-radius:50%;}
+    .date.today .number {color:var(--accent);background:#e7f1e7;font-weight:800;}
+    .date.selected {background:var(--deep);border-color:var(--deep);color:#fff;}
+    .date.selected .number {color:#fff;background:rgba(255,255,255,.15);}
+    .date .count {font-size:10px;color:#759283;background:#e7f0e6;border-radius:20px;min-height:17px;min-width:19px;padding:1px 5px;font-weight:750;}
+    .date.selected .count {color:#254c36;background:#d5e8d8;}
+    .date.empty {background:none;pointer-events:none;}
+    .cal-foot {font-size:12px;color:#98a098;display:flex;align-items:center;gap:8px;border-top:1px solid #f0f1ed;padding-top:18px;margin-top:17px;}
+    .legend-dot {display:inline-block;width:8px;height:8px;background:#82aa8a;border-radius:50%;}
+    .day-card {overflow:hidden;}
+    .day-head {padding:24px 24px 17px;border-bottom:1px solid var(--line);background:linear-gradient(125deg,#f9fbf7,#fff);}
+    .day-date-label {font-size:11px;color:var(--accent);letter-spacing:1.25px;text-transform:uppercase;font-weight:800;}
+    .day-heading {font-size:24px;line-height:1.3;margin:8px 0 3px;font-weight:800;letter-spacing:-.65px;}
+    .day-sub {color:#9aa29a;font-size:12px;}
+    .entry-container {padding:19px 24px 5px;max-height:440px;overflow:auto;}
+    .entry {padding:13px 0; border-bottom:1px solid #eef0eb;}
+    .entry:first-child {padding-top:0;}
+    .entry:last-child {border:0;}
+    .entry-row {display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:7px;}
+    .pill {padding:4px 8px;border-radius:20px;font-weight:800;font-size:10px;letter-spacing:.2px;}
+    .cat-work {background:#e9efff;color:#4a68a3;}
+    .cat-learning {background:#eeeaff;color:#7462ac;}
+    .cat-personal {background:#fff0e3;color:#ad783d;}
+    .cat-health {background:#ffe9ed;color:#b65e72;}
+    .cat-other {background:#edf0e9;color:#718071;}
+    .entry-time {font-size:11px;color:#9ba49b;font-weight:700;}
+    .entry-text {margin:0;color:#39483c;font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;}
+    .entry-actions {margin-left:auto;display:flex;gap:4px;}
+    .entry-actions .button {font-size:11px;color:#748275;}
+    .entry-actions .button.danger {color:#b25a5a;}
+    .empty-day {text-align:center;padding:28px 12px 34px;}
+    .empty-art {margin:0 auto 13px;width:54px;height:54px;background:#eff4ed;color:#7fa38a;display:grid;place-items:center;border-radius:17px;}
+    .empty-art svg {width:27px;height:27px;}
+    .empty-day strong {font-size:13px;color:#506a55;}
+    .empty-day p {font-size:12px;color:#99a499;line-height:1.6;max-width:220px;margin:8px auto 0;}
+    .composer {padding:18px 24px 24px;border-top:1px solid var(--line);}
+    .composer-title {font-size:13px;font-weight:800;margin:0 0 14px;}
+    .field-label {display:block;font-size:11px;font-weight:750;color:#6e7b6f;margin-bottom:6px;}
+    .field {width:100%;border:1px solid #e1e7df;background:#fbfcfb;border-radius:10px;padding:11px 12px;color:#33463a;resize:vertical;}
+    .field:focus {outline:none;border-color:#78a78a;box-shadow:0 0 0 3px #d9ebdf;}
+    textarea.field {min-height:90px;line-height:1.5;}
+    .form-row {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:12px 0;}
+    .form-actions {display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
+    .search-area {margin-top:19px;padding:19px 22px;}
+    .search-title {font-size:15px;font-weight:800;margin:0 0 12px;}
+    .search-wrap {position:relative;}
+    .search-wrap svg {width:18px;height:18px;position:absolute;left:12px;top:12px;color:#94a497;}
+    .search-input {padding-left:39px;}
+    .search-results {margin-top:9px;display:none;max-height:270px;overflow:auto;}
+    .search-results.visible {display:block;}
+    .search-item {display:block;width:100%;text-align:left;border:0;border-top:1px solid #f0f1ed;background:#fff;padding:12px 4px;}
+    .search-item:hover {background:#f9fcf8;}
+    .search-item span {font-size:11px;color:var(--accent);display:block;font-weight:750;margin-bottom:4px;}
+    .search-item b {font-size:12px;color:#4b554b;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+    .toast {position:fixed;right:24px;bottom:22px;padding:13px 17px;background:var(--deep);color:white;border-radius:12px;box-shadow:0 16px 32px #172f2433;font-weight:700;max-width:min(380px,90vw);z-index:10;display:none;line-height:1.5;}
+    .toast.visible {display:block;}
+    .privacy-note {font-size:11px;color:#99a099;margin-top:18px;line-height:1.7;}
+    .privacy-note strong {color:#718273;}
+    .import-input {display:none;}
+    @media(max-width:1150px) {.app {grid-template-columns:185px 1fr;}.sidebar {padding:28px 12px;}.main {padding:28px 20px;}.dashboard {grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:12px;}.cal-card {padding:15px;}.day-head,.entry-container,.composer {padding-left:17px;padding-right:17px;}.date {min-height:64px;}.stat {padding:13px;}}
+    @media(max-width:900px) {.app {grid-template-columns:1fr;}.sidebar {display:flex;flex-direction:row;align-items:center;justify-content:space-between;padding:13px 18px;gap:8px;}.sidebar nav,.sidebar-bottom,.side-footer {display:none;}.brand-mark {width:32px;height:32px;}.main {padding:22px 15px;}.dashboard {grid-template-columns:1fr;}.date {min-height:78px;}.search-area {margin-top:13px;}}
+    @media(max-width:530px) {.stats {gap:7px;}.stat {display:block;padding:12px 10px;}.stat-icon {width:29px;height:29px;border-radius:9px;margin-bottom:7px;}.stat-icon svg {width:15px;height:15px;}.stat-val {font-size:20px;}.stat-name {font-size:10px;}.top {align-items:flex-start;}.top-actions {width:100%;}.top-actions .button {flex:1;}.cal-card {padding:12px;}.date {min-height:56px;padding:4px 2px 3px;gap:3px;border-radius:8px;}.date .number {width:25px;height:25px;font-size:12px;}.date .count {font-size:9px;min-height:14px;}.cal-grid {gap:3px;}.cal-title {font-size:17px;}.day-heading {font-size:21px;}.form-row {grid-template-columns:1fr;}.entry-actions {width:100%;justify-content:flex-end;}.sidebar .brand-sub {display:none;}}
+
+    .remind-card {margin-top:19px;padding:21px 23px;}
+    .remind-heading {display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+    .remind-title {font-size:18px;letter-spacing:-.3px;font-weight:800;margin:0 0 5px;}
+    .remind-sub {font-size:12px;color:var(--muted);margin:0;line-height:1.5;}
+    .remind-status {display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:11px 0 16px;padding:12px 14px;background:#f6f8fa;border:1px solid #e6eaf0;border-radius:11px;color:#667181;font-size:12px;line-height:1.55;}
+    .remind-columns {display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,.9fr);gap:20px;align-items:start;}
+    .remind-list {min-height:105px;max-height:280px;overflow-y:auto;}
+    .remind-item {padding:11px 0;border-bottom:1px solid #eef1ee;display:flex;gap:10px;align-items:flex-start;}
+    .remind-item:last-child {border-bottom:0;}
+    .remind-icon {width:35px;height:35px;display:grid;place-items:center;flex-shrink:0;background:#fff5e7;border-radius:11px;color:#a87936;font-size:17px;}
+    .remind-info {min-width:0;flex:1;}
+    .remind-info strong {display:block;overflow-wrap:anywhere;font-size:13px;color:#31493c;}
+    .remind-meta {font-size:11px;color:#829083;margin-top:5px;line-height:1.5;}
+    .remind-actions {display:flex;gap:3px;align-items:center;flex-shrink:0;}
+    .remind-form {background:#fbfcfa;padding:16px;border:1px solid #edf0e9;border-radius:13px;}
+    .remind-form h3 {font-size:13px;margin:0 0 12px;font-weight:800;}
+    .remind-form .form-row {margin:10px 0;}
+    .remind-form .field {padding:9px 10px;}
+    .remind-form .form-actions {margin-top:12px;}
+    .remind-empty {padding:23px 12px;line-height:1.7;color:#95a197;font-size:12px;text-align:center;background:#fcfdfb;border-radius:11px;}
+    .remind-count {font-size:9px;font-weight:800;color:#976b35;background:#fff1db;border-radius:20px;padding:2px 5px;line-height:1.1;}
+    .date.selected .remind-count {background:#f7e3c2;color:#7f5a2f;}
+    .day-indicators {display:flex;gap:3px;justify-content:center;align-items:center;min-height:16px;flex-wrap:wrap;}
+    .due {color:#a46033;font-weight:750;}
+    .remind-note {font-size:11px;line-height:1.65;color:#829081;margin:13px 0 0;}
+    @media(max-width:900px){.remind-columns {grid-template-columns:1fr 1fr;}}
+    @media(max-width:670px){.remind-columns {grid-template-columns:1fr;}.remind-card {padding:17px 15px;}}
+    @media(max-width:530px){.date .remind-count {font-size:8px;padding:1px 4px;}.date .count {font-size:8px;}.remind-actions .button {padding:5px 7px;}}
+    .search-empty {padding:12px;color:var(--muted);font-size:12px;}
+    :root[data-theme="dark"] {
+      color-scheme:dark;
+      --bg:#141b17; --paper:#1c2620; --paper2:#202c24; --line:#36473c;
+      --ink:#e7eee8; --muted:#aebeb1; --accent:#86c5a6; --accent2:#294138;
+      --deep:#2d5542; --shadow:0 14px 42px rgba(0,0,0,.14);
+    }
+    [data-theme="dark"] .sidebar,
+    [data-theme="dark"] .private-card,
+    [data-theme="dark"] .day-head,
+    [data-theme="dark"] .remind-form,
+    [data-theme="dark"] .remind-status {background:var(--paper2);border-color:var(--line);}
+    [data-theme="dark"] .button,
+    [data-theme="dark"] .icon-btn,
+    [data-theme="dark"] .field,
+    [data-theme="dark"] .search-item {background:var(--bg);border-color:var(--line);color:var(--ink);}
+    [data-theme="dark"] .button:hover,
+    [data-theme="dark"] .icon-btn:hover,
+    [data-theme="dark"] .search-item:hover,
+    [data-theme="dark"] .date:hover {background:var(--accent2);}
+    [data-theme="dark"] .button.primary {background:var(--accent);border-color:var(--accent);color:#14251c;}
+    [data-theme="dark"] .button.danger {color:#f4aaaa;}
+    [data-theme="dark"] .field:focus {border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+    [data-theme="dark"] .side-link.active,
+    [data-theme="dark"] .brand,
+    [data-theme="dark"] .private-card b,
+    [data-theme="dark"] .empty-day strong,
+    [data-theme="dark"] .entry-text,
+    [data-theme="dark"] .remind-info strong,
+    [data-theme="dark"] .search-item b {color:var(--ink);}
+    [data-theme="dark"] :is(.side-link,.brand-sub,.section-label,.side-footer,.private-card,.weekday,.cal-foot,
+    .day-sub,.entry-time,.empty-day p,.field-label,.remind-status,.remind-meta,.remind-empty,.remind-note,
+    .privacy-note,.privacy-note strong) {color:var(--muted);}
+    [data-theme="dark"] :is(.cal-foot,.entry,.remind-item) {border-color:var(--line);}
+    [data-theme="dark"] :is(.stat-icon,.empty-art,.date.today .number,.date .count) {
+      background:var(--accent2);color:var(--accent);
+    }
+    [data-theme="dark"] .date,
+    [data-theme="dark"] .remind-empty {background:var(--paper2);color:var(--ink);}
+    [data-theme="dark"] .date.selected {background:var(--deep);color:white;}
+    [data-theme="dark"] .date.selected .number {background:rgba(255,255,255,.15);color:white;}
+    [data-theme="dark"] .date.empty {background:none;}
+    [data-theme="dark"] .due {color:#f1bc8b;}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand" aria-label="Daybook home"><div class="brand-mark">✳</div><div><div class="brand-title">daybook.</div><div class="brand-sub">Activities & reminders</div></div></div>
+      <nav aria-label="App navigation"><p class="section-label">Workspace</p><button class="side-link active" id="sideCalendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6M17 2v6M3 10h18"/></svg>Activity calendar</button><button class="side-link" id="sideToday"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18M5 3v4m14-4v4M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/><path d="m9 15 2 2 4-4"/></svg>Jump to today</button></nav>
+      <div class="sidebar-bottom"><div class="private-card"><b>🔒 Private, by default</b>Your notes and reminders stay <span id="dataLocation">in this browser on this device</span>. Use a JSON backup to move to another device.</div><div class="side-footer">Made for the moments that matter</div></div>
+    </aside>
+    <main class="main">
+      <div class="top"><div><div class="eyebrow">A little record of your everyday</div><h1>My Activity Calendar</h1><p class="subhead">Tap a date, log what you did, and set reminders for what comes next.</p></div><div class="top-actions"><button class="button" id="importBtn" title="Restore activities from a JSON backup">↥ Import</button><button class="button" id="icsBtn" title="Export reminders into Apple, Google or Outlook Calendar">↓ Calendar (.ics)</button><button class="button" id="csvBtn" title="Export all entries to a spreadsheet-compatible CSV">↓ CSV</button><button class="button primary" id="exportBtn" title="Save a JSON backup of all activities">↓ Save backup</button><input id="importFile" class="import-input" type="file" accept="application/json,.json" /></div></div>
+      <section class="stats" aria-label="Activity statistics"><div class="stat"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6M17 2v6M3 10h18M7 15l3 3 6-6"/></svg></div><div><div class="stat-val" id="loggedDays">0</div><div class="stat-name">Days recorded</div></div></div><div class="stat"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></div><div><div class="stat-val" id="totalEntries">0</div><div class="stat-name">Total activities</div></div></div><div class="stat"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg></div><div><div class="stat-val" id="monthEntries">0</div><div class="stat-name">This month</div></div></div></section>
+      <div class="dashboard"><section class="card cal-card" aria-label="Monthly calendar"><div class="cal-header"><h2 class="cal-title" id="monthLabel"></h2><div class="cal-nav"><button class="icon-btn" id="prevMonth" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button><button class="button small" id="todayBtn">Today</button><button class="icon-btn" id="nextMonth" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button></div></div><div class="weekdays" aria-hidden="true"><span class="weekday">Mon</span><span class="weekday">Tue</span><span class="weekday">Wed</span><span class="weekday">Thu</span><span class="weekday">Fri</span><span class="weekday">Sat</span><span class="weekday">Sun</span></div><div class="cal-grid" id="calendarGrid" aria-label="Choose a date"></div><div class="cal-foot"><span class="legend-dot"></span>Green counts show activities; orange bells show reminders</div></section>
+      <section class="card day-card" aria-label="Selected date's activities"><div class="day-head"><div class="day-date-label">Your day in review</div><h2 class="day-heading" id="selectedDayHeading"></h2><div class="day-sub" id="selectedDaySub"></div></div><div class="entry-container" id="entries" aria-live="polite"></div><div class="composer"><h3 class="composer-title" id="formHeading">+ Add an activity for this date</h3><form id="entryForm"><label class="field-label" for="activityText">What did you do?</label><textarea class="field" id="activityText" maxlength="3000" placeholder="e.g. Practiced SQL joins, worked on a pipeline, went for a walk…" required></textarea><div class="form-row"><div><label class="field-label" for="activityCategory">Category</label><select class="field" id="activityCategory"><option value="Learning">📚 Learning</option><option value="Work">💻 Work</option><option value="Personal">🌻 Personal</option><option value="Health">♡ Health</option><option value="Other">◌ Other</option></select></div><div><label class="field-label" for="activityTime">Time (optional)</label><input class="field" type="time" id="activityTime" /></div></div><div class="form-actions"><button class="button" type="button" id="cancelEdit" hidden>Cancel edit</button><button class="button primary" id="saveEntry" type="submit">+ Add activity</button></div></form></div></section></div>
+
+      <section class="card remind-card" aria-label="Daybook reminders">
+        <div class="remind-heading">
+          <div><h2 class="remind-title">⏰ Reminders for <span id="reminderDayLabel"></span></h2><p class="remind-sub">One-time or repeating reminders. Select any date above to review its alerts.</p></div>
+          <button class="button small" id="enableAlerts" type="button">Enable browser alerts</button>
+        </div>
+        <div class="remind-status" id="alertStatus" role="status">In-app alerts run while this page is open. Calendar exports help with alerts when it is closed.</div>
+        <div class="remind-columns">
+          <div><div class="remind-list" id="reminderList" aria-live="polite"></div></div>
+          <form class="remind-form" id="reminderForm">
+            <h3 id="reminderFormHeading">+ Set a reminder</h3>
+            <label class="field-label" for="reminderTitle">What should I remind you about?</label>
+            <input class="field" id="reminderTitle" type="text" maxlength="160" placeholder="e.g. Review SQL joins" required />
+            <div class="form-row"><div><label class="field-label" for="reminderDate">Date</label><input class="field" id="reminderDate" type="date" required /></div><div><label class="field-label" for="reminderTime">Time</label><input class="field" id="reminderTime" type="time" required /></div></div>
+            <label class="field-label" for="reminderRepeat">Repeat</label>
+            <select class="field" id="reminderRepeat"><option value="none">Never (one-time)</option><option value="daily">Every day</option><option value="weekly">Every week</option></select>
+            <div class="form-actions"><button type="button" class="button small" id="cancelReminder" hidden>Cancel edit</button><button class="button primary small" type="submit" id="saveReminder">+ Save reminder</button></div>
+          </form>
+        </div>
+        <p class="remind-note" id="reminderNote"><strong>For reliable alerts after closing the app:</strong> choose “Calendar (.ics)” and import the file into your device’s calendar with notifications enabled. Calendar apps differ in how they handle imported alarms. Browser notifications only work when supported and while Daybook is open; no cloud sync is included.</p>
+      </section>
+      <section class="card search-area" aria-label="Search logged activities"><h2 class="search-title">Find something you recorded</h2><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="searchInput" class="field search-input" type="search" placeholder="Search across all your days…" aria-label="Search activities" /></div><div id="searchResults" class="search-results" aria-live="polite"></div></section>
+      <p class="privacy-note" id="privacyNote"><strong>Offline & private:</strong> This file works without internet in modern browsers. Activities and reminders are stored separately in this browser, not synced across devices. Use <strong>Save backup</strong> and <strong>Import</strong> to transfer data. Mobile file viewers may restrict storage; import a backup in a regular browser if needed.</p>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    (async () => {
+      'use strict';
+      const desktop = window.daybookDesktop;
+      const STORE_KEY = 'daybook.activity-calendar.v1';
+      const REMINDER_STORE_KEY = 'daybook.reminders.v2';
+      const FIRED_STORE_KEY = 'daybook.reminders.fired.v2';
+      const CATEGORIES = ['Learning', 'Work', 'Personal', 'Health', 'Other'];
+      const $ = (id) => document.getElementById(id);
+      const localToday = () => { const d = new Date(); return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-'); };
+      const makeDate = (date) => new Date(Number(date.slice(0,4)),Number(date.slice(5,7))-1, Number(date.slice(8,10)),12,0,0);
+      const dateKey = (y,m,d) => [y, String(m+1).padStart(2,'0'), String(d).padStart(2,'0')].join('-');
+      const fmtDate = (date,options) => new Intl.DateTimeFormat('en-IN',options).format(makeDate(date));
+      const isValidDate = (s) => { if(typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false; const d=makeDate(s);return dateKey(d.getFullYear(),d.getMonth(),d.getDate())===s; };
+      const isValidTime = (s) => typeof s==='string' && (s==='' || /^([01]\d|2[0-3]):[0-5]\d$/.test(s));
+      const timestamp = value => typeof value==='string' ? value : '';
+      const VALID_REPEAT=['none','daily','weekly'];
+      const escapeHtml = (str) => String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+      const uid = () => ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      let entries=[];
+      let reminders=[];
+      let editingReminderId=null;
+      let firedKeys={};
+      let selectedDate=localToday();
+      let visibleYear=Number(selectedDate.slice(0,4));
+      let visibleMonth=Number(selectedDate.slice(5,7))-1;
+      let editingId=null;
+      let toastHandle=null;
+      const toast = (message) => {const el=$('toast');el.textContent=message;el.classList.add('visible');clearTimeout(toastHandle);toastHandle=setTimeout(()=>el.classList.remove('visible'),4000);};
+      const readEntries = () => {
+        try {
+          const stored=localStorage.getItem(STORE_KEY);
+          if(!stored) return [];
+          const obj=JSON.parse(stored);
+          if(!Array.isArray(obj)) throw new Error('Bad data');
+          return obj.filter(e => e && typeof e.id==='string' && isValidDate(e.date) && typeof e.text==='string' && e.text.trim()).map(e=>({id:e.id,date:e.date,text:e.text,time:isValidTime(e.time||'')?e.time||'':'',category:CATEGORIES.includes(e.category)?e.category:'Other',createdAt:timestamp(e.createdAt),updatedAt:timestamp(e.updatedAt)}));
+        } catch (e) {toast('Your saved data could not be read. You can restore a JSON backup.');return [];}
+      };
+      async function saveChanges(section) {
+        try {
+          if (desktop) {
+            await desktop.save({entries,reminders});
+          } else {
+            if (section!=='reminders') localStorage.setItem(STORE_KEY,JSON.stringify(entries));
+            if (section!=='entries') localStorage.setItem(REMINDER_STORE_KEY,JSON.stringify(reminders));
+          }
+          return true;
+        } catch {
+          toast('Changes could not be saved. Save a JSON backup to keep your edits.');
+          return false;
+        }
+      }
+      const sorted = (items) => [...items].sort((a,b)=>a.time.localeCompare(b.time)||a.createdAt.localeCompare(b.createdAt));
+      const countByDate=()=>entries.reduce((map,e)=>(map[e.date]=(map[e.date]||0)+1,map),{});
+      function renderStats(){const counts=countByDate();$('loggedDays').textContent=Object.keys(counts).length;$('totalEntries').textContent=entries.length;$('monthEntries').textContent=entries.filter(e=>e.date.startsWith(`${visibleYear}-${String(visibleMonth+1).padStart(2,'0')}-`)).length;}
+      function renderCalendar(){
+        $('monthLabel').textContent=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric'}).format(new Date(visibleYear,visibleMonth,1));
+        const firstDay=(new Date(visibleYear,visibleMonth,1).getDay()+6)%7;
+        const dayCount=new Date(visibleYear,visibleMonth+1,0).getDate();
+        const map=countByDate(); let html='';
+        for(let i=0;i<firstDay;i++) html+='<div class="date empty" aria-hidden="true"></div>';
+        for(let d=1;d<=dayCount;d++){
+          const key=dateKey(visibleYear,visibleMonth,d),count=map[key]||0,remindCount=reminders.filter(r=>occursOn(r,key)).length;
+          const selected=key===selectedDate,today=key===localToday();
+          html+=`<button type="button" class="date ${selected?'selected':''} ${today?'today':''}" data-date="${key}" aria-label="${escapeHtml(fmtDate(key,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}, ${count} activities, ${remindCount} reminders" aria-pressed="${selected}"><span class="number">${d}</span>${count||remindCount?`<span class="day-indicators">${count?`<span class="count">${count}</span>`:''}${remindCount?`<span class="remind-count">⏰ ${remindCount}</span>`:''}</span>`:''}</button>`;
+        }
+        $('calendarGrid').innerHTML=html;
+        renderStats();
+      }
+      function categoryClass(cat){return ({Learning:'cat-learning',Work:'cat-work',Personal:'cat-personal',Health:'cat-health',Other:'cat-other'})[cat]||'cat-other';}
+      function renderDay(){
+        $('selectedDayHeading').textContent=fmtDate(selectedDate,{weekday:'long',month:'long',day:'numeric'});
+        const dayEntries=sorted(entries.filter(e=>e.date===selectedDate));
+        $('selectedDaySub').textContent=`${fmtDate(selectedDate,{year:'numeric'})} · ${dayEntries.length} ${dayEntries.length===1?'activity':'activities'} recorded`;
+        if(!dayEntries.length){$('entries').innerHTML=`<div class="empty-day"><div class="empty-art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16v14H4zM8 3v4m8-4v4M4 10h16M9 15h6"/></svg></div><strong>Nothing recorded yet</strong><p>What happened on this day? Add an activity below to start your timeline.</p></div>`;return;}
+        $('entries').innerHTML=dayEntries.map(e=>`<article class="entry"><div class="entry-row"><span class="pill ${categoryClass(e.category)}">${escapeHtml(e.category)}</span>${e.time?`<span class="entry-time">${escapeHtml(e.time)}</span>`:''}<div class="entry-actions"><button class="button small ghost" data-action="edit" data-id="${escapeHtml(e.id)}" aria-label="Edit activity">Edit</button><button class="button small ghost danger" data-action="delete" data-id="${escapeHtml(e.id)}" aria-label="Delete activity">Delete</button></div></div><p class="entry-text">${escapeHtml(e.text)}</p></article>`).join('');
+      }
+      function renderSearch(){
+        const query=$('searchInput').value.trim().toLocaleLowerCase();
+        const res=$('searchResults');if(!query){res.classList.remove('visible');res.innerHTML='';return;}
+        const matches=entries.filter(e=>`${e.text} ${e.category} ${e.date}`.toLocaleLowerCase().includes(query)).sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time)).slice(0,75);
+        res.classList.add('visible');
+        res.innerHTML=matches.length?matches.map(e=>`<button class="search-item" type="button" data-date="${e.date}"><span>${escapeHtml(fmtDate(e.date,{day:'numeric',month:'short',year:'numeric'}))} · ${escapeHtml(e.category)}</span><b>${escapeHtml(e.text)}</b></button>`).join(''):'<p class="search-empty">No matching activities found.</p>';
+      }
+      function render(){renderCalendar();renderDay();renderReminders();renderSearch();}
+      function clearEdit(){editingId=null;$('entryForm').reset();$('formHeading').textContent='+ Add an activity for this date';$('saveEntry').textContent='+ Add activity';$('cancelEdit').hidden=true;}
+      function chooseDate(date){if(!isValidDate(date))return;selectedDate=date;visibleYear=Number(date.slice(0,4));visibleMonth=Number(date.slice(5,7))-1;clearEdit();clearReminderEdit();render();}
+      function moveMonth(delta){const d=new Date(visibleYear,visibleMonth+delta,1);visibleYear=d.getFullYear();visibleMonth=d.getMonth();renderCalendar();}
+      function editEntry(id){const e=entries.find(item=>item.id===id);if(!e)return;editingId=id;$('activityText').value=e.text;$('activityTime').value=e.time;$('activityCategory').value=e.category;$('formHeading').textContent='Edit your activity';$('saveEntry').textContent='Save changes';$('cancelEdit').hidden=false;$('activityText').focus();}
+      $('entryForm').addEventListener('submit',async event=>{
+        event.preventDefault();const text=$('activityText').value.trim(),time=$('activityTime').value,category=$('activityCategory').value;
+        if(!text)return toast('Write a short note about your activity.');
+        if(!isValidTime(time))return toast('The time is not valid.');
+        if(editingId){const e=entries.find(item=>item.id===editingId);if(e){e.text=text;e.time=time;e.category=category;e.updatedAt=new Date().toISOString();}}else{entries.push({id:uid(),date:selectedDate,text,time,category,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});}
+        const savedDate=selectedDate;
+        const saved=saveChanges('entries');clearEdit();render();
+        if(await saved)toast('Activity saved for '+fmtDate(savedDate,{day:'numeric',month:'short',year:'numeric'}));
+      });
+      $('calendarGrid').addEventListener('click',event=>{const node=event.target.closest('[data-date]');if(node)chooseDate(node.dataset.date);});
+      $('entries').addEventListener('click',async event=>{const btn=event.target.closest('[data-action]');if(!btn)return;const id=btn.dataset.id;
+        if(btn.dataset.action==='edit')editEntry(id);
+        if(btn.dataset.action==='delete'){
+          if(!confirm('Delete this activity? This cannot be undone.'))return;
+          entries=entries.filter(e=>e.id!==id);if(editingId===id)clearEdit();
+          const saved=saveChanges('entries');render();
+          if(await saved)toast('Activity deleted.');
+        }
+      });
+      $('prevMonth').addEventListener('click',()=>moveMonth(-1));$('nextMonth').addEventListener('click',()=>moveMonth(1));$('todayBtn').addEventListener('click',()=>chooseDate(localToday()));$('sideToday').addEventListener('click',()=>chooseDate(localToday()));$('sideCalendar').addEventListener('click',()=>{clearEdit();render();});$('cancelEdit').addEventListener('click',clearEdit);$('searchInput').addEventListener('input',renderSearch);
+      $('searchResults').addEventListener('click',event=>{const btn=event.target.closest('[data-date]');if(!btn)return;chooseDate(btn.dataset.date);$('searchInput').value='';renderSearch();$('selectedDayHeading').scrollIntoView({behavior:'smooth',block:'center'});});
+      async function exportDownload(data,mime,kind,basename,message){
+        try {
+          const date=localToday();
+          if(desktop){
+            if(!await desktop.exportFile(kind,date,data))return;
+          }else{
+            const url=URL.createObjectURL(new Blob([data],{type:mime}));
+            const link=document.createElement('a');
+            link.href=url;link.download=basename+'-'+date+'.'+kind;
+            document.body.appendChild(link);link.click();link.remove();
+            setTimeout(()=>URL.revokeObjectURL(url),1000);
+          }
+          toast(message);
+        }catch{toast('Could not save this file. Choose a writable location and try again.');}
+      }
+      $('exportBtn').addEventListener('click',()=>{
+        const data=JSON.stringify({app:'Daybook',version:2,exportedAt:new Date().toISOString(),entries,reminders},null,desktop?0:2);
+        exportDownload(data,'application/json','json','daybook-backup','Backup saved.');
+      });
+      const csvCell=(value)=>'"'+String(value??'').replace(/"/g,'""')+'"';
+      $('csvBtn').addEventListener('click',()=>{
+        const lines=[['Date','Time','Category','Activity'].map(csvCell).join(',')];
+        entries.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)).forEach(e=>lines.push([e.date,e.time,e.category,e.text].map(csvCell).join(',')));
+        exportDownload('\ufeff'+lines.join('\r\n'),'text/csv;charset=utf-8','csv','daybook-activities','CSV exported.');
+      });
+      $('importBtn').addEventListener('click',()=>$('importFile').click());
+      $('importFile').addEventListener('change',async event=>{
+        const file=event.target.files?.[0];event.target.value='';if(!file)return;
+        if(file.size>15_000_000){toast('Backup file is too large.');return;}
+        try{
+          const obj=JSON.parse(await file.text());if(obj.app!=='Daybook'||![1,2].includes(obj.version)||!Array.isArray(obj.entries))throw new Error('Not a Daybook backup');
+          const imported=[];
+          for(const e of obj.entries){if(!e||typeof e.text!=='string'||!e.text.trim()||e.text.length>3000||!isValidDate(e.date)||!isValidTime(e.time||'')||!CATEGORIES.includes(e.category))throw new Error('A record in the backup is invalid');imported.push({id:(typeof e.id==='string'&&e.id.length<150)?e.id:uid(),date:e.date,time:e.time||'',category:e.category,text:e.text,createdAt:timestamp(e.createdAt),updatedAt:timestamp(e.updatedAt)});}
+          const importedReminders=[];
+          if(obj.version===2){
+            if(!Array.isArray(obj.reminders))throw new Error('Reminders missing from backup');
+            for(const r of obj.reminders){if(!validReminder(r))throw new Error('A reminder in the backup is invalid');importedReminders.push(cleanReminder(r));}
+          }
+          if(!confirm(`Import ${imported.length} activities and ${importedReminders.length} reminders? Matching IDs will be updated. Existing records will be kept.`))return;
+          const map=new Map(entries.map(e=>[e.id,e]));imported.forEach(e=>map.set(e.id,e));entries=[...map.values()];
+          const reminderMap=new Map(reminders.map(r=>[r.id,r]));importedReminders.forEach(r=>reminderMap.set(r.id,r));reminders=[...reminderMap.values()];
+          const saved=saveChanges('all');clearEdit();clearReminderEdit();render();
+          if(await saved)toast(`Imported ${imported.length} activities and ${importedReminders.length} reminders.`);
+        }catch(e){toast('Could not import this file: '+e.message);}
+      });
+
+      // A recurring reminder starts on its date and appears on each matching future day.
+      function occursOn(r,date){
+        if(date<r.date) return false;
+        if(r.repeat==='daily')return true;
+        if(r.repeat==='none')return date===r.date;
+        const base=Date.UTC(+r.date.slice(0,4),+r.date.slice(5,7)-1,+r.date.slice(8,10));
+        const target=Date.UTC(+date.slice(0,4),+date.slice(5,7)-1,+date.slice(8,10));
+        return (target-base)%(7*86400000)===0;
+      }
+      const validReminder=r=>r && typeof r.title==='string' && r.title.trim().length>0 && r.title.length<=160 && isValidDate(r.date) && typeof r.time==='string' && r.time.length>0 && isValidTime(r.time) && VALID_REPEAT.includes(r.repeat);
+      const cleanReminder=r=>({id:(typeof r.id==='string'&&r.id.length<150)?r.id:uid(),title:r.title.trim(),date:r.date,time:r.time,repeat:r.repeat,createdAt:typeof r.createdAt==='string'?r.createdAt:'',updatedAt:typeof r.updatedAt==='string'?r.updatedAt:''});
+      function readReminders(){
+        try{const data=localStorage.getItem(REMINDER_STORE_KEY);if(!data)return [];
+          const obj=JSON.parse(data);if(!Array.isArray(obj))throw new Error('Not an array');return obj.filter(validReminder).map(cleanReminder);
+        }catch(e){toast('Reminders could not be read. Import a backup if available.');return [];}
+      }
+      function clearReminderEdit(){
+        editingReminderId=null;$('reminderForm').reset();$('reminderDate').value=selectedDate;
+        $('reminderFormHeading').textContent='+ Set a reminder';$('saveReminder').textContent='+ Save reminder';$('cancelReminder').hidden=true;
+      }
+      function renderReminders(){
+        $('reminderDayLabel').textContent=fmtDate(selectedDate,{day:'numeric',month:'short',year:'numeric'});
+        const todayReminders=reminders.filter(r=>occursOn(r,selectedDate)).sort((a,b)=>a.time.localeCompare(b.time));
+        const list=$('reminderList');
+        if(!todayReminders.length){list.innerHTML='<div class="remind-empty">No reminders on this date yet. Add one to plan ahead.</div>';return;}
+        const now=new Date(),isToday=selectedDate===localToday();const nowTime=[String(now.getHours()).padStart(2,'0'),String(now.getMinutes()).padStart(2,'0')].join(':');
+        list.innerHTML=todayReminders.map(r=>{
+          const overdue=isToday&&r.time<nowTime;
+          const repetition=r.repeat==='daily'?'Repeats daily':r.repeat==='weekly'?'Repeats weekly':'One-time';
+          return `<article class="remind-item"><span class="remind-icon" aria-hidden="true">🔔</span><div class="remind-info"><strong>${escapeHtml(r.title)}</strong><div class="remind-meta"><span class="${overdue?'due':''}">${escapeHtml(r.time)}${overdue?' · Earlier today':''}</span> · ${repetition}</div></div><div class="remind-actions"><button type="button" class="button small ghost" data-reminder-action="edit" data-reminder-id="${escapeHtml(r.id)}">Edit</button><button type="button" class="button small ghost danger" data-reminder-action="delete" data-reminder-id="${escapeHtml(r.id)}">Delete</button></div></article>`;
+        }).join('');
+      }
+      $('reminderForm').addEventListener('submit',async e=>{
+        e.preventDefault();const title=$('reminderTitle').value.trim(),date=$('reminderDate').value,time=$('reminderTime').value,repeat=$('reminderRepeat').value;
+        if(!validReminder({title,date,time,repeat}))return toast('Enter a title, valid date and time, and repeat option.');
+        if(editingReminderId){const r=reminders.find(x=>x.id===editingReminderId);if(!r)return;
+          Object.assign(r,{title,date,time,repeat,updatedAt:new Date().toISOString()});
+        }else{reminders.push({id:uid(),title,date,time,repeat,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});}
+        selectedDate=date;visibleYear=+date.slice(0,4);visibleMonth=+date.slice(5,7)-1;
+        const saved=saveChanges('reminders');clearReminderEdit();render();
+        if(await saved)toast('Reminder saved.');
+      });
+      $('reminderList').addEventListener('click',async e=>{
+        const el=e.target.closest('[data-reminder-action]');if(!el)return;
+        const id=el.dataset.reminderId,reminder=reminders.find(r=>r.id===id);if(!reminder)return;
+        if(el.dataset.reminderAction==='edit'){
+          editingReminderId=id;$('reminderTitle').value=reminder.title;$('reminderDate').value=reminder.date;$('reminderTime').value=reminder.time;$('reminderRepeat').value=reminder.repeat;
+          $('reminderFormHeading').textContent='Edit reminder';$('saveReminder').textContent='Save changes';$('cancelReminder').hidden=false;
+          $('reminderTitle').focus();
+        }else if(el.dataset.reminderAction==='delete'){
+          if(!confirm('Delete this reminder (including future repeats)?'))return;
+          reminders=reminders.filter(r=>r.id!==id);if(editingReminderId===id)clearReminderEdit();
+          const saved=saveChanges('reminders');render();
+          if(await saved)toast('Reminder deleted.');
+        }
+      });
+      $('cancelReminder').addEventListener('click',clearReminderEdit);
+      function showAlertStatus(){
+        const support=typeof Notification!=='undefined';
+        const permission=support?Notification.permission:'unavailable';
+        $('alertStatus').textContent= !support?'Browser notifications are unavailable here. In-app reminder checks run while Daybook is open; export .ics to your calendar for closed-app alerts.'
+          :permission==='granted'?'Browser alerts enabled while this tab remains open. For closed-app reminders, export .ics to your calendar.'
+          :permission==='denied'?'Browser alerts are blocked. Adjust the browser settings or use a calendar .ics export for device reminders.'
+          :'In-app reminders run while this page is open. Select “Enable browser alerts” to request notifications where supported, or export .ics for device reminders.';
+        $('enableAlerts').disabled=!support||permission==='denied';
+      }
+      $('enableAlerts').addEventListener('click',async()=>{
+        if(typeof Notification==='undefined')return showAlertStatus();
+        if(!window.isSecureContext){toast('This browser may require HTTPS or localhost for notifications. Use the .ics calendar export for alerts outside the app.');showAlertStatus();return;}
+        try{const granted=await Notification.requestPermission();showAlertStatus();toast(granted==='granted'?'Browser alerts enabled for open-app reminders.':'Browser alerts not enabled. You can use calendar export instead.');}
+        catch(e){showAlertStatus();toast('Notification permission is unavailable here. Use calendar export.');}
+      });
+      function readFired(){try{const obj=JSON.parse(localStorage.getItem(FIRED_STORE_KEY)||'{}');return obj && typeof obj==='object'?obj:{};}catch(e){return {};}}
+      function checkReminders(){
+        const now=new Date();
+        const graceStart=new Date(+now-90_000);
+        const today=localToday();
+        const startDay=dateKey(graceStart.getFullYear(),graceStart.getMonth(),graceStart.getDate());
+        const days=startDay===today?[today]:[today,startDay];
+        let changed=false;
+        reminders.forEach(r=>{
+          const [hours,minutes]=r.time.split(':').map(Number);
+          const day=days.find(day=>{
+            if(!occursOn(r,day))return false;
+            const scheduled=makeDate(day).setHours(hours,minutes,0,0);
+            return scheduled>=+graceStart && scheduled<=+now;
+          });
+          if(!day)return;
+          const key=`${r.id}:${day}:${r.time}`;
+          if(firedKeys[key])return;firedKeys[key]=Date.now();changed=true;
+          toast('⏰ Reminder: '+r.title);
+          if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
+            try{new Notification('Daybook reminder',{body:r.title,tag:key});}catch(e){}
+          }
+        });
+        if(changed){
+          const cutoff=Date.now()-31*86400000;
+          Object.keys(firedKeys).forEach(k=>{if(firedKeys[k]<cutoff)delete firedKeys[k];});
+          try{localStorage.setItem(FIRED_STORE_KEY,JSON.stringify(firedKeys));}catch(e){}
+          renderReminders();
+        }
+      }
+      const icsEscape=s=>String(s).replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+      const icsDate=(date,time)=>date.replace(/-/g,'')+'T'+time.replace(':','')+'00';
+      const icsStamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+      const endIcsDate=(date,time)=>{
+        const d=makeDate(date);const parts=time.split(':').map(Number);d.setHours(parts[0],parts[1]+15,0,0);
+        return dateKey(d.getFullYear(),d.getMonth(),d.getDate()).replace(/-/g,'')+'T'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+'00';
+      };
+      $('icsBtn').addEventListener('click',()=>{
+        if(!reminders.length)return toast('Add at least one reminder before exporting a calendar.');
+        const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Daybook//Activity Calendar 2//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+        reminders.forEach(r=>{
+          lines.push('BEGIN:VEVENT','UID:'+r.id.replace(/[^a-z0-9-]/gi,'')+'@daybook.local','DTSTAMP:'+icsStamp(),
+            'DTSTART:'+icsDate(r.date,r.time),'DTEND:'+endIcsDate(r.date,r.time),
+            'SUMMARY:'+icsEscape(r.title),'DESCRIPTION:Daybook reminder (local time)');
+          if(r.repeat!=='none')lines.push('RRULE:FREQ='+r.repeat.toUpperCase());
+          lines.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEscape(r.title),'TRIGGER:PT0S','END:VALARM','END:VEVENT');
+        });
+        lines.push('END:VCALENDAR');
+        exportDownload(lines.join('\r\n')+'\r\n','text/calendar;charset=utf-8','ics','daybook-reminders','Calendar reminders exported.');
+      });
+      // Add a starter example to new profiles.
+      async function seedExampleActivity(){
+        // Deleting the starter entry must stay deleted on subsequent launches.
+        if(!desktop){
+          try { if(localStorage.getItem(STORE_KEY)!==null) return; }
+          catch(e) { return; }
+        }
+        entries.push({id:'seed-reunion-2026-11-22',date:'2026-11-22',time:'',category:'Personal',text:'Caught up with an old friend. We talked for hours and forgot our coffee had gone cold.',createdAt:'2026-11-22T11:33:00.000Z',updatedAt:'2026-11-22T11:33:00.000Z'});
+        await saveChanges('entries');
+      }
+
+      let lastRenderedDay=localToday();
+      function updateClock() {
+        const hour=new Date().getHours();
+        document.documentElement.dataset.theme=hour>=18||hour<6?'dark':'light';
+        const day=localToday();
+        if(day!==lastRenderedDay){
+          lastRenderedDay=day;
+          renderCalendar();
+          renderReminders();
+        }
+      }
+
+      updateClock();
+      if(desktop){
+        desktop.onReminders(titles=>{
+          toast('⏰ '+titles.join(' · '));
+          renderReminders();
+        });
+        try{
+          const {records,notifications}=await desktop.load();
+          if(records){({entries,reminders}=records);}else{await seedExampleActivity();}
+          $('enableAlerts').hidden=true;
+          $('alertStatus').textContent=notifications
+            ? 'Reminders run while Daybook is open, including when minimized. Check system notification settings for desktop banners.'
+            : 'Reminders run while Daybook is open. In-app alerts are available on this desktop.';
+          $('reminderNote').textContent='For alerts after quitting Daybook, export Calendar (.ics) and import it into a calendar with notifications enabled.';
+          $('dataLocation').textContent='on this device';
+          $('privacyNote').textContent='Daybook works offline. Use Save backup and Import to transfer entries and reminders between installations.';
+        }catch{
+          document.querySelector('.app').inert=true;
+          toast('Daybook could not read its local data. Reopen the app to try again.');
+          clearTimeout(toastHandle);
+          return;
+        }
+      }else{
+        entries=readEntries();reminders=readReminders();firedKeys=readFired();
+        await seedExampleActivity();
+        showAlertStatus();
+      }
+      clearReminderEdit();render();
+      if(!desktop){checkReminders();setInterval(checkReminders,15000);}
+      setInterval(updateClock,15_000);
+      window.addEventListener('focus',updateClock);
+      document.addEventListener('visibilitychange',()=>{
+        if(document.hidden)return;
+        updateClock();
+        if(!desktop)checkReminders();
+        renderReminders();
+      });
+    })();
+  </script>
+</body>
+</html>

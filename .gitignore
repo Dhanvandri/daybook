@@ -1,0 +1,25 @@
+# OS / editor junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*~
+*.swp
+
+# Local caches and optional test artifacts
+__pycache__/
+.pytest_cache/
+node_modules/
+coverage/
+playwright-report/
+test-results/
+*.log
+
+# Personal data exports must never be committed
+*.ics
+*backup*.json
+*activities*.csv
+
+# Electron build output
+/dist/

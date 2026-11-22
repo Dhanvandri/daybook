@@ -1,10 +1,13 @@
-const { mkdir, open, readFile, rename, rm } = require('node:fs/promises');
+const fs = require('node:fs/promises');
+const { setTimeout: delay } = require('node:timers/promises');
 const { dirname } = require('node:path');
 const { DAY, dueReminders } = require('./reminders.cjs');
 
 const CATEGORIES = ['Learning', 'Work', 'Personal', 'Health', 'Other'];
 const REPEATS = ['none', 'daily', 'weekly'];
 const MAX_RECORD_BYTES = 14_000_000;
+const RETRYABLE_REPLACE_ERRORS = new Set(['EBUSY', 'EPERM', 'EACCES']);
+const REPLACE_RETRY_DELAYS = [20, 40, 80, 160, 320, 640];
 
 function validDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -61,25 +64,35 @@ function validateRecords(data) {
 async function writeState(file, state) {
   const temporary = file + '.tmp';
   try {
-    const handle = await open(temporary, 'w', 0o600);
+    const handle = await fs.open(temporary, 'w', 0o600);
     try {
       await handle.writeFile(JSON.stringify(state), 'utf8');
       await handle.sync();
     } finally {
       await handle.close();
     }
-    await rename(temporary, file);
+    // Windows can briefly deny replacement while another process has the file open.
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        await fs.rename(temporary, file);
+        break;
+      } catch (error) {
+        const retryDelay = REPLACE_RETRY_DELAYS[attempt];
+        if (!RETRYABLE_REPLACE_ERRORS.has(error.code) || retryDelay === undefined) throw error;
+        await delay(retryDelay);
+      }
+    }
   } catch (error) {
-    await rm(temporary, { force: true }).catch(() => {});
+    await fs.rm(temporary, { force: true }).catch(() => {});
     throw error;
   }
 }
 
 async function openStore(file) {
-  await mkdir(dirname(file), { recursive: true });
+  await fs.mkdir(dirname(file), { recursive: true });
   let current = null;
   try {
-    const loaded = JSON.parse(await readFile(file, 'utf8'));
+    const loaded = JSON.parse(await fs.readFile(file, 'utf8'));
     if (loaded?.version !== 1 || !loaded.fired || Array.isArray(loaded.fired) ||
         typeof loaded.fired !== 'object' || !Object.values(loaded.fired).every(Number.isFinite)) {
       throw new Error('Invalid Daybook data file');

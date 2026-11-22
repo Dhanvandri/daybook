@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import fs, { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -73,4 +73,30 @@ test('a corrupt desktop data file is preserved on startup', async t => {
   await writeFile(file, '{broken');
   await assert.rejects(openStore(file), SyntaxError);
   assert.equal(await readFile(file, 'utf8'), '{broken');
+});
+
+test('desktop retries a locked data file and keeps the previous state if replacement fails', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'daybook-store-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const file = join(dir, 'daybook-data.json');
+  const records = { entries: [], reminders: [days] };
+  const desktop = await openStore(file);
+  await desktop.save({ entries: [], reminders: [] });
+  const rename = fs.rename;
+  let attempts = 0;
+  const replace = t.mock.method(fs, 'rename', async (from, to) => {
+    attempts += 1;
+    if (attempts <= 2) throw Object.assign(new Error('File is locked'), { code: 'EPERM' });
+    await rename(from, to);
+  });
+  await desktop.save(records);
+  assert.equal(attempts, 3);
+  assert.deepEqual((await openStore(file)).read(), desktop.read());
+  replace.mock.mockImplementation(async () => {
+    throw Object.assign(new Error('Disk error'), { code: 'EIO' });
+  });
+  await assert.rejects(desktop.save({ entries: [], reminders: [] }), { code: 'EIO' });
+  assert.equal(desktop.read().reminders.length, 1);
+  assert.equal((await openStore(file)).read().reminders.length, 1);
+  await assert.rejects(readFile(file + '.tmp'), { code: 'ENOENT' });
 });

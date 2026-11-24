@@ -4,14 +4,11 @@ Daybook is a modern way to keep a diary. Record everyday moments in an activity 
 
 ## Open Daybook
 
-Download the installer for your computer from the [Daybook 2.1.1 GitHub Release](https://github.com/Dhanvandri/daybook/releases/tag/v2.1.1). A GitHub account is optional.
+[Download Daybook from the official website](https://dhanvandri.github.io/daybook/#downloads). Choose Windows x64, macOS Apple silicon, macOS Intel, or Linux x64. The website also has the SHA-256 checksums for verifying your installer.
 
-| Computer | Download | How to open it |
-| --- | --- | --- |
-| Windows x64 | [Windows x64 (.exe)](https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-win-x64.exe) | Run the installer and open Daybook from Start. |
-| macOS Apple silicon | [macOS Apple silicon (.dmg)](https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-mac-arm64.dmg) | For M-series Macs. Open the disk image and drag Daybook to Applications. |
-| macOS Intel | [macOS Intel (.dmg)](https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-mac-x64.dmg) | For Intel Macs. Open the disk image and drag Daybook to Applications. |
-| Linux x64 | [Linux x64 (.AppImage)](https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-linux-x86_64.AppImage) | Make the AppImage executable, then run it. |
+- **Windows** — run the `.exe` installer and open Daybook from Start.
+- **macOS** — open the `.dmg` and drag Daybook to Applications. Check **Apple menu → About This Mac** to find your chip or processor.
+- **Linux** — make the `.AppImage` executable, then run it.
 
 Windows builds are unsigned. macOS builds use ad-hoc signing and aren't notarized. Your operating system may warn you or block the downloaded package. If it does, use the source commands below. Linux AppImages require FUSE on most distributions. On supported builds, `./Daybook-<version>-linux-x86_64.AppImage --appimage-extract-and-run` is another way to start the app if FUSE is unavailable. Replace the placeholder with the package filename.
 

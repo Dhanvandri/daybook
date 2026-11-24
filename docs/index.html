@@ -21,6 +21,11 @@
     h1 { margin: 0; color: #233d32; font-size: clamp(3.25rem, 8vw, 6.6rem); line-height: .96; letter-spacing: -.07em; }
     .intro { max-width: 35ch; margin-block: 1.6rem 1.9rem; color: #414b40; font-size: 1.12rem; line-height: 1.65; }
     .button { display: inline-block; background: var(--green); color: #fff; padding: .85em 1.2em; border-radius: .45em; text-decoration: none; font-weight: 650; }
+    #downloads { padding-block: 1.5rem 2.5rem; border-top: 1px solid var(--line); }
+    .download-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); gap: 1rem; margin: 1.25rem 0; padding: 0; list-style: none; }
+    .download-list a { display: flex; flex-direction: column; justify-content: center; gap: .2rem; min-height: 5rem; padding: .85rem 1rem; border: 1px solid var(--line); border-radius: .45rem; background: #fffcf4; }
+    .download-list a:hover { border-color: var(--green); }
+    .download-list .format { color: #414b40; font-size: .9rem; }
     .button:hover { background: #1d4033; }
     .paper { margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: .7rem; background: #fffcf4; box-shadow: 0 1.2rem 3rem #3c392416; }
     figcaption { padding: 1.25rem 1.65rem; color: var(--green); font-size: .82rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid var(--line); }
@@ -44,12 +49,23 @@
       <div>
         <h1 id="headline">A modern way to keep a diary.</h1>
         <p class="intro">Write down the moments you want to remember. Find them later in your calendar, set reminders, and keep your entries on your own device.</p>
-        <a class="button" href="https://github.com/Dhanvandri/daybook#open-daybook">Get Daybook</a>
+        <a class="button" href="#downloads">Download Daybook</a>
       </div>
       <figure class="paper">
         <figcaption>Example diary entry</figcaption>
         <blockquote><p class="entry">“Caught up with an old friend. We talked for hours and forgot our coffee had gone cold.”</p></blockquote>
       </figure>
+    </section>
+    <section id="downloads" aria-labelledby="download-heading">
+      <h2 id="download-heading">Download Daybook 2.1.1</h2>
+      <ul class="download-list" role="list">
+        <li><a href="https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-win-x64.exe"><strong>Windows x64</strong><span class="format">Download .exe</span></a></li>
+        <li><a href="https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-mac-arm64.dmg"><strong>macOS Apple silicon</strong><span class="format">Download .dmg</span></a></li>
+        <li><a href="https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-mac-x64.dmg"><strong>macOS Intel</strong><span class="format">Download .dmg</span></a></li>
+        <li><a href="https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-linux-x86_64.AppImage"><strong>Linux x64</strong><span class="format">Download .AppImage</span></a></li>
+      </ul>
+      <p>On a Mac, check <strong>Apple menu → About This Mac</strong> for your chip or processor.</p>
+      <p><a href="https://github.com/Dhanvandri/daybook/releases/tag/v2.1.1">Release notes and installation details</a></p>
     </section>
     <section class="features" aria-label="Daybook features">
       <div><h2>An activity calendar</h2><p>See what you wrote on any day or search across your entries.</p></div>
@@ -57,6 +73,6 @@
       <div><h2>Offline by design</h2><p>Start without an account, and export a backup when you want to move your entries.</p></div>
     </section>
   </main>
-  <footer><span>Windows · macOS · Linux</span><a href="https://github.com/Dhanvandri/daybook/actions">Desktop builds</a></footer>
+  <footer><span>Windows · macOS · Linux</span><a href="https://github.com/Dhanvandri/daybook/releases/tag/v2.1.1">GitHub Release</a></footer>
 </body>
 </html>

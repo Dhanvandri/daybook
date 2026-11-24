@@ -4,14 +4,14 @@ Daybook is a modern way to keep a diary. Record everyday moments in an activity 
 
 ## Open Daybook
 
-Open [Desktop builds](https://github.com/Dhanvandri/daybook/actions), select a successful **Build Daybook Desktop** run, and download the artifact for your computer. Sign in to GitHub to download workflow artifacts. Unzip the artifact before opening the installer inside it.
+Download the installer for your computer from the [Daybook 2.1.1 GitHub Release](https://github.com/Dhanvandri/daybook/releases/tag/v2.1.1). A GitHub account is optional.
 
-| Computer | Build artifact | How to open it |
+| Computer | Download | How to open it |
 | --- | --- | --- |
-| Windows x64 | `Daybook-Windows-x64` | Run the `.exe` installer and open Daybook from Start. |
-| macOS with Apple silicon | `Daybook-macOS-arm64` | Open the `.dmg` and drag Daybook to Applications. |
-| macOS with an Intel processor | `Daybook-macOS-x64` | Open the `.dmg` and drag Daybook to Applications. |
-| Linux x64 | `Daybook-Linux-x64` | Make the `.AppImage` executable and run it. |
+| Windows x64 | [Windows x64 (.exe)](https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-win-x64.exe) | Run the installer and open Daybook from Start. |
+| macOS Apple silicon | [macOS Apple silicon (.dmg)](https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-mac-arm64.dmg) | For M-series Macs. Open the disk image and drag Daybook to Applications. |
+| macOS Intel | [macOS Intel (.dmg)](https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-mac-x64.dmg) | For Intel Macs. Open the disk image and drag Daybook to Applications. |
+| Linux x64 | [Linux x64 (.AppImage)](https://github.com/Dhanvandri/daybook/releases/download/v2.1.1/Daybook-2.1.1-linux-x86_64.AppImage) | Make the AppImage executable, then run it. |
 
 Windows builds are unsigned. macOS builds use ad-hoc signing and aren't notarized. Your operating system may warn you or block the downloaded package. If it does, use the source commands below. Linux AppImages require FUSE on most distributions. On supported builds, `./Daybook-<version>-linux-x86_64.AppImage --appimage-extract-and-run` is another way to start the app if FUSE is unavailable. Replace the placeholder with the package filename.
 
